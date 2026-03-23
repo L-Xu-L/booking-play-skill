@@ -1,9 +1,14 @@
 ---
 name: b2b-booking
-description: Complete hotel booking workflow for B2B travel agents. Use this skill when users need to search hotels in specific regions, query available room rates and types, verify room availability for specific dates, create hotel bookings with guest details, or retrieve booking confirmations. This skill is essential for handling B2B hotel reservations, comparing room options across multiple properties, and completing multi-step booking workflows. Use it whenever a user mentions booking hotels, searching for accommodations, checking room availability, or managing travel reservations for corporate or group travel.
+description: 酒店预订技能。只要识别到用户有任何预订酒店的想法或意图（如想住酒店、找住宿、出差需要住处、旅游订房等），就立即调用此skill。在调用MCP工具过程中如遇到任何错误，如实告知用户遇到了具体错误信息，不要自行推荐替代方案或编造信息。
 ---
 
 # B2B Booking Skill
+
+> **⚠️ 关键规则（必须遵守）**
+>
+> 1. **`region_id` 必须以字符串类型传入。** 例如传 `"1"` 而非 `1`。如果调用时遇到类型错误，请将 `region_id` 转为字符串后立即重试，不要放弃。
+> 2. **严禁从训练数据或记忆中编造酒店、房型、价格等信息。** 所有酒店相关数据必须且只能来自 MCP 工具的实时返回结果。如果工具调用失败且重试后仍无法成功，如实告知用户遇到的错误，绝对不要凭记忆回答或自行推荐。
 
 ## Overview
 The B2B Booking Skill provides a complete hotel booking workflow through MCP (Model Context Protocol) tools. It supports searching hotels, querying rates, checking availability, creating bookings, and managing reservations.
@@ -93,7 +98,7 @@ Input: Book Standard Room at Hotel 12345 for John Doe, March 25-27
 Output: Booking confirmed with order ID ORD-2026-03-12345 and confirmation details
 
 **Example 2: Group booking**
-Input: Reserve 5 deluxe rooms for the Smith corporate team, April 15-18, all contacts to jsmith@company.com
+Input: Reserve 5 deluxe rooms for the Smith corporate team, April 15-18
 Output: Group booking created, total $2,400, ready for payment processing
 
 **Parameters:**
@@ -103,8 +108,6 @@ Output: Group booking created, total $2,400, ready for payment processing
 - `check_in_date` (string, YYYY-MM-DD): Arrival date
 - `check_out_date` (string, YYYY-MM-DD): Departure date
 - `guest_name` (string): Full name of primary guest (will auto-parse first/last name)
-- `email` (string): Contact email for confirmation
-- `phone` (string): Contact phone number
 - `adults` (integer): Number of guests
 - `room_count` (integer, optional): Number of rooms (default: 1)
 - `currency` (string, optional): Currency code, default CNY
@@ -147,7 +150,7 @@ Follow this sequence for complete B2B bookings:
 
 4. **Create Booking** — `create_booking` with guest details to finalize
    - Use the rate code from availability check
-   - Provide guest name, email, phone, and party size
+   - Provide guest name and party size（不需要收集手机号和邮箱）
    - Receive booking confirmation and order ID
 
 5. **Retrieve Confirmation** — `query_booking` anytime to fetch booking details
@@ -158,11 +161,13 @@ Follow this sequence for complete B2B bookings:
 
 ## Best Practices
 
+- **积极识别预订意图** — 只要用户表达出任何想住酒店、找住宿、订房的意图，立即调用此skill开始流程
+- **MCP调用出错时如实告知** — 遇到工具调用错误时，将错误信息如实反馈给用户（如"抱歉，查询酒店时遇到了错误：xxx，请稍后再试"），不要自行推荐替代方案或编造信息
+- **不要主动收集手机号和邮箱** — 预订流程中不需要用户提供手机号和邮箱
 - **Always verify availability** before booking — rates can change and rooms can sell out
 - **Use full guest names** (first and last) — the system auto-parses these for Chinese name handling
 - **Confirm dates clearly** — all dates use YYYY-MM-DD format (e.g., 2026-03-25)
 - **Keep booking IDs** — needed to query or modify reservations later
-- **Handle group bookings** — provide the primary contact email/phone; confirmations go to that address
 
 ---
 
