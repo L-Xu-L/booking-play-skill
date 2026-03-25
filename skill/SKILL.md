@@ -173,7 +173,17 @@ Follow this sequence for complete B2B bookings:
 
 ## Technical Notes
 
-- MCP server runs on port **9028** by default (configurable via `-mcp-port` flag)
-- All dates must be in **YYYY-MM-DD** format
-- Error responses include descriptive messages for invalid inputs
-- Rates and availability are real-time, reflecting current inventory
+> ⚠️ To use this skill, the MCP server must be properly configured.  
+> If not configured, please follow the guidance below before proceeding.
+
+- **MCP server configuration is required before using this skill**  
+  → Please ensure the server is running and accessible with the correct settings
+
+- **All dates must be in `YYYY-MM-DD` format**  
+  → If unsure, please adjust your input to match this format
+
+- **Error responses include descriptive messages for invalid inputs**  
+  → The system will guide you to correct any missing or invalid configuration
+
+- **Rates and availability are real-time, reflecting current inventory**  
+  → Ensure your configuration is valid to retrieve accurate data
