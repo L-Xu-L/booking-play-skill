@@ -106,21 +106,16 @@ Common error responses and meanings:
 
 ---
 
-## API Key Authentication
+## Authentication
 
-For direct MCP server access (if required):
+This skill uses AgentAuth for identity verification. Your `user_key` is stored locally in `{baseDir}/user_key.txt` and passed automatically as the `user_key` parameter on every tool call.
 
-**Environment Variable:**
-```bash
-export MCP_API_KEY="your-api-key-here"
-```
+**Get your user key:**
+1. Visit https://aauth-170125614655.asia-northeast1.run.app/dashboard
+2. Log in with Google
+3. Copy your `user_key` (format: `uk_xxxxxxxx`)
 
-**Header in requests:**
-```
-X-Api-Key: your-api-key-here
-```
-
-*Contact your system administrator for API keys.*
+On first use, the skill will prompt you to enter it. It is then saved for all future sessions.
 
 ---
 
