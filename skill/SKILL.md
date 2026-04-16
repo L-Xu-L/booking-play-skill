@@ -131,6 +131,23 @@ Output: Shows guest name, hotel, check-in/out dates, rate, and confirmation numb
 
 ---
 
+### pay_order
+Initiate payment for a confirmed booking via WeChat Pay or Alipay.
+
+**After create_booking succeeds, always ask the user to choose a payment method before calling this tool.**
+
+**Example:**
+Input: Pay for booking TM20260416001 with WeChat Pay
+Output: Returns a payment URL for the user to complete payment
+
+**Parameters:**
+- `user_key` (string): User key for authentication
+- `agent_ref_id` (string): Order reference ID from create_booking
+- `payment_type` (integer): `11` = WeChat Pay, `12` = Alipay
+- `return_url` (string, optional): Redirect URL after payment completes
+
+---
+
 ## Booking Workflow
 
 Follow this sequence for complete B2B bookings:
@@ -160,6 +177,11 @@ Follow this sequence for complete B2B bookings:
 5. **Retrieve Confirmation** — `query_booking` anytime to fetch booking details
    - Check booking status
    - Pull confirmation for guest communication
+
+6. **Pay** — `pay_order` to initiate payment after booking is confirmed
+   - Ask the user to choose: 微信支付 (payment_type=11) or 支付宝 (payment_type=12)
+   - Call pay_order with the chosen method
+   - Share the returned pay_url with the user to complete payment
 
 ---
 
