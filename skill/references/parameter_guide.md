@@ -1,246 +1,146 @@
-# B2B Booking Skill - Eval 运行指南
+# B2B Booking Skill - Parameter Reference
 
-按照 skill-creator 的最佳实践运行评估。
+## Region IDs (HTS Regions)
 
-## 完整 Eval 流程
+**China:**
+- `569` - Beijing (北京)
+- `2862` - Shanghai (上海)
+- `765` - Zhengzhou (郑州)
+- `794` - Chongqing (重庆)
+- `3045` - Shenzhen (深圳)
+- `1328` - Hangzhou (杭州)
+- `3489` - Wuhan (武汉)
 
-### 1️⃣ 启动 MCP 服务
+**Asia:**
+- `174` - Singapore (新加坡)
+- `575` - Bangkok (曼谷)
+- `2446` - Osaka (大阪)
+- `3263` - Tokyo (东京)
+- `20994` - Bali (巴厘岛)
 
-```bash
-cd chls
-go run . -p 9094 -mcp-port 9095 -c 801
+**Europe:**
+- `1918` - London (伦敦)
+- `2481` - Paris (巴黎)
+- `2736` - Roma (罗马)
+- `514` - Berlin (柏林)
+
+*Note: Region IDs are HTS-specific identifiers. Use `/static/v2/region/fuzzy?keyword=xxx` API to search for more regions.*
+
+---
+
+## Date Format Rules
+
+All date parameters must use ISO 8601 format: **YYYY-MM-DD**
+
+Examples:
+- ✅ `2026-03-25` (March 25, 2026)
+- ✅ `2026-12-31` (December 31, 2026)
+- ❌ `03/25/2026` (incorrect format)
+- ❌ `2026-3-25` (missing leading zero on month)
+- ❌ `25-03-2026` (day-first format)
+
+Minimum lead time varies by property but typically:
+- Search: Can query current date or future
+- Booking: Recommend 24-48 hours in advance
+
+---
+
+## Currency Codes
+
+Standard ISO 4217 currency codes:
+- `CNY` - Chinese Yuan (default for China region)
+- `USD` - US Dollar
+- `EUR` - Euro
+- `GBP` - British Pound
+- `JPY` - Japanese Yen
+
+*The system normalizes all quotes to the configured default currency.*
+
+---
+
+## Hotel Pricing Tiers
+
+Typical room type hierarchy by price:
+1. **Standard Room** - Base price, typically no view
+2. **Deluxe Room** - Enhanced amenities, partial view
+3. **Suite** - Large space, premium amenities
+4. **Executive Suite** - Top tier, concierge included
+
+Prices vary significantly by:
+- Region (tier-1 cities > tier-2 > tier-3)
+- Season (peak season June-Aug, Dec; off-season Oct-Nov)
+- Day of week (weekends typically higher)
+- Lead time (last-minute bookings premium)
+
+---
+
+## Guest Name Handling
+
+The system automatically parses full names into first/last components:
+
+✅ **Supported formats:**
+- "John Smith" → first: "John", last: "Smith"
+- "李明" (Chinese) → Auto-converts to pinyin for booking
+- "Jean-Claude Van Damme" → Handles hyphenated names
+- "王 宏伟" → Handles space-separated Chinese names
+
+⚠️ **Best practice:**
+- Provide full legal name as it appears on ID
+- For Chinese guests, use full Chinese name; system handles pinyin conversion
+- For compound surnames, provide in standard format
+
+---
+
+## Error Messages
+
+Common error responses and meanings:
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| "Invalid region ID" | Region doesn't exist | Verify region_id with admin |
+| "No hotels found" | Region exists but no inventory | Try different dates or region |
+| "Invalid date format" | Date not YYYY-MM-DD | Reformat date string |
+| "Room not available" | Sold out for selected dates | Try adjacent dates or different room type |
+| "Rate check failed" | Rate no longer valid | Run check_room_availability again |
+| "Booking creation failed" | Guest info invalid or system error | Verify guest name, email, phone format |
+
+---
+
+## Authentication
+
+This skill uses AgentAuth for identity verification. Your `user_key` is stored locally in `{baseDir}/user_key.txt` and passed automatically as the `user_key` parameter on every tool call.
+
+**Get your user key:**
+1. Visit https://aauth-170125614655.asia-northeast1.run.app/dashboard
+2. Log in with Google
+3. Copy your `user_key` (format: `uk_xxxxxxxx`)
+
+On first use, the skill will prompt you to enter it. It is then saved for all future sessions.
+
+---
+
+## Workflow Decision Tree
+
 ```
-
-输出应该包含：
-```
-MCP server listening on :9095
-Available tools: search_hotels, query_room_rates, check_room_availability, create_booking, query_booking
-```
-
-### 2️⃣ 创建工作目录结构
-
-```bash
-# 创建工作空间目录
-mkdir -p b2b-booking-workspace/iteration-1/{eval-1-basic-search,eval-2-booking,eval-3-group-travel}/{with_skill,without_skill}/outputs
-```
-
-### 3️⃣ 准备 Eval 元数据
-
-为每个测试用例创建 `eval_metadata.json`（参考下方）
-
-### 4️⃣ 并行运行测试
-
-**With Skill 版本（3 个测试用例）：**
-
-```bash
-# 这应该通过 subagent 或 claude CLI 来完成
-# 对于每个 eval，运行类似的命令：
-
-claude -p <<'PROMPT'
-You have access to the B2B Booking Skill at: /path/to/skill/
-Task: [INSERT EVAL PROMPT HERE]
-Save outputs to: b2b-booking-workspace/iteration-1/eval-1-basic-search/with_skill/outputs/
-PROMPT
-```
-
-**Without Skill 基线版本：**
-
-```bash
-# 相同的提示，但不使用 skill
-claude -p <<'PROMPT'
-Task: [INSERT EVAL PROMPT HERE]
-Save outputs to: b2b-booking-workspace/iteration-1/eval-1-basic-search/without_skill/outputs/
-PROMPT
-```
-
-### 5️⃣ 收集并生成查看器
-
-```bash
-# 运行评估聚合
-cd b2b-booking-workspace/iteration-1
-python3 /path/to/skill-creator/scripts/aggregate_benchmark.py . --skill-name b2b-booking
-
-# 生成 HTML 查看器
-nohup python3 /path/to/skill-creator/eval-viewer/generate_review.py . \
-  --skill-name "b2b-booking" \
-  --benchmark benchmark.json \
-  > /dev/null 2>&1 &
-
-# 在浏览器中打开并审查结果
+User request for booking?
+├─ Search? → search_hotels with region + dates
+│  └─ Got hotel → query_room_rates with hotel_id
+│     └─ Compare rates → check_room_availability for specific room
+│        └─ Available? → create_booking with guest info
+│           └─ Success → query_booking for confirmation
+│
+├─ Check status? → query_booking with booking_id
+│
+└─ Need confirmation? → query_booking
 ```
 
 ---
 
-## Eval 测试用例
+## Performance Notes
 
-### Eval 1: 基础酒店搜索
+- **Search latency:** ~1-2 seconds (network dependent)
+- **Rate queries:** ~500ms per hotel
+- **Availability checks:** Real-time, ~300ms
+- **Booking creation:** 2-5 seconds (includes confirmation)
 
-**目的**: 验证区域搜索和费率查询功能
-
-**eval_metadata.json:**
-```json
-{
-  "eval_id": 1,
-  "eval_name": "basic-hotel-search",
-  "prompt": "I need to find hotels in Beijing for a corporate team of 4 people traveling March 25-27, 2026. Show me the 3 most affordable options and their room rates for standard rooms.",
-  "assertions": [
-    {
-      "name": "returns_multiple_hotels",
-      "description": "Search returns at least 1 hotel with complete details (id, name, price)"
-    },
-    {
-      "name": "includes_pricing",
-      "description": "Response includes room rates and currency information"
-    },
-    {
-      "name": "date_handling",
-      "description": "Correct dates used in search (March 25-27, 2026)"
-    }
-  ]
-}
-```
-
-**预期输出**:
-- ✅ 返回 1 个或多个北京酒店
-- ✅ 包含价格和货币信息
-- ✅ 显示标准房价格
-
----
-
-### Eval 2: 可用性检查和预订
-
-**目的**: 验证完整的预订工作流
-
-**eval_metadata.json:**
-```json
-{
-  "eval_id": 2,
-  "eval_name": "availability-check-and-booking",
-  "prompt": "I found hotel ID 12345 in Shanghai. Can you check if deluxe rooms are available for April 10-12, 2026 for 2 adults at the lowest rate? If available, create a booking for John Smith (john.smith@company.com, +86-10-1234567) for 1 deluxe room.",
-  "assertions": [
-    {
-      "name": "availability_verified",
-      "description": "Response confirms room availability status before booking"
-    },
-    {
-      "name": "booking_created",
-      "description": "Booking successfully created with confirmation ID"
-    },
-    {
-      "name": "guest_info_correct",
-      "description": "Booking includes correct guest name and contact information"
-    }
-  ]
-}
-```
-
-**预期输出**:
-- ✅ 检查可用性
-- ✅ 创建预订
-- ✅ 返回确认订单 ID
-- ✅ 包含客人信息
-
----
-
-### Eval 3: 团体旅行预订
-
-**目的**: 验证处理大型群组的能力
-
-**eval_metadata.json:**
-```json
-{
-  "eval_id": 3,
-  "eval_name": "group-travel-booking",
-  "prompt": "I need to book accommodations for a 20-person corporate retreat. Search for hotels in Hangzhou available June 15-18, 2026. Find the best value option and show me room rates for standard and deluxe rooms so we can book a mix. How many total rooms would we need if we put 2 people per room?",
-  "assertions": [
-    {
-      "name": "group_size_handled",
-      "description": "Search correctly handles 20-person group size"
-    },
-    {
-      "name": "multiple_room_types",
-      "description": "Response compares at least 2 room types (standard + deluxe)"
-    },
-    {
-      "name": "calculation_provided",
-      "description": "Response includes calculation for room quantity (20/2 = 10 rooms)"
-    }
-  ]
-}
-```
-
-**预期输出**:
-- ✅ 搜索杭州酒店
-- ✅ 显示多种房型
-- ✅ 计算房间数量
-
----
-
-## 调试常见问题
-
-### MCP 连接问题
-
-**症状**: `method "tools/call" is invalid during session initialization`
-
-**原因**: 每个 HTTP 请求创建新的会话。MCP SDK 需要持续的 SSE 连接。
-
-**解决方案**:
-- 使用 MCP 客户端库（如 `@anthropic-ai/sdk` 的 MCP 支持）
-- 或在服务器端修复会话管理
-
-### 工具响应错误
-
-**症状**: "Invalid region ID" 或 "No hotels found"
-
-**调试步骤**:
-1. 验证区域 ID（见 references/parameter_guide.md）
-2. 检查日期是否为未来日期
-3. 查看服务器日志中是否有底层错误
-
-### 预订失败
-
-**常见原因**:
-- 客人信息格式不正确
-- 价格代码过期
-- 库存问题
-
-**调试**:
-```bash
-# 检查服务器日志
-tail -f /tmp/mcp_server.log
-```
-
----
-
-## Skill-Creator Eval 最佳实践
-
-### Assertions 设计
-
-好的 assertions 应该是：
-- ✅ **客观且可验证** — 不依赖意见判断
-- ✅ **具体** — 明确说明检查什么
-- ✅ **独立** — 不互相依赖
-
-### 测试用例选择
-
-3 个用例应该覆盖：
-1. **基础功能** — 核心工作流
-2. **完整流程** — 多步操作
-3. **边界情况** — 大规模/复杂场景
-
-### 迭代改进
-
-运行完 eval 后：
-1. 审查输出和定量指标
-2. 识别改进机会
-3. 更新 SKILL.md 或工具
-4. 进行下一轮 eval
-
----
-
-## 相关文件
-
-- `SKILL.md` — 主要 Skill 定义
-- `evals/evals.json` — Eval 提示列表
-- `references/parameter_guide.md` — 参数参考
-- `scripts/validate_booking.py` — 响应验证脚本
+For bulk operations, consider rate-limiting to avoid API throttling.
