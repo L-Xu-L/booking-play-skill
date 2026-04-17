@@ -102,7 +102,21 @@ Common error responses and meanings:
 | "Invalid date format" | Date not YYYY-MM-DD | Reformat date string |
 | "Room not available" | Sold out for selected dates | Try adjacent dates or different room type |
 | "Rate check failed" | Rate no longer valid | Run check_room_availability again |
-| "Booking creation failed" | Guest info invalid or system error | Verify guest name, email, phone format |
+| "Booking creation failed" | Guest info invalid or system error | Verify guest name format |
+
+---
+
+## Order Status Reference
+
+| Status | Chinese | Meaning |
+|--------|---------|---------|
+| `UNPAID` | 待支付 | Booking created, payment not yet made |
+| `PENDING` | 已支付，待酒店确认 | Payment received, waiting for hotel to confirm |
+| `CONFIRMED` | 已确认 | Hotel confirmed, booking is guaranteed |
+| `CANCELLED` | 已取消 | Booking has been cancelled |
+| `CONFIRM_FAILED` | 确认失败 | Hotel confirmation failed, contact support |
+
+> **Important**: `PENDING` means the payment was successful and the hotel is processing confirmation — do NOT tell the user to pay again.
 
 ---
 
