@@ -31,6 +31,7 @@ Input: keyword "广州南站"
 Output: Returns nearby regions and hotels matching the keyword
 
 **Parameters:**
+- `user_key` (string): Read from `{baseDir}/user_key.txt`
 - `keyword` (string): Search keyword — city name, landmark, station, hotel name, etc.
 
 ---
@@ -47,7 +48,7 @@ Input: Search for accommodations for 20 people in Shanghai, April 10-15
 Output: Lists available properties with pricing for the group (e.g. ¥680/night)
 
 **Parameters:**
-- `agent_code` (string): Agent authorization code
+- `user_key` (string): Read from `{baseDir}/user_key.txt`
 - `region_id` (string): HTS Region ID for the area (e.g., '1' for Beijing)
 - `check_in_date` (string, YYYY-MM-DD): Arrival date
 - `check_out_date` (string, YYYY-MM-DD): Departure date
@@ -65,12 +66,12 @@ Input: Hotel ID 12345, March 25-27, 2 adults
 Output: Shows standard rooms (¥620/night), deluxe rooms (¥850/night), suites (¥1280/night)
 
 **Parameters:**
-- `agent_code` (string): Agent authorization code
+- `user_key` (string): Read from `{baseDir}/user_key.txt`
 - `hotel_id` (string): The hotel to query
 - `check_in_date` (string, YYYY-MM-DD): Arrival date
 - `check_out_date` (string, YYYY-MM-DD): Departure date
 - `adults` (integer): Number of adults **per room** (e.g. 2 means 2 adults per room)
-- `room_count` (integer, optional): Number of rooms to book (default: 1)
+- `room_count` (integer, optional): Number of rooms (default: 1)
 
 ---
 
@@ -82,7 +83,7 @@ Input: Verify Standard Room at Hotel 12345 is available for March 25-27 at the q
 Output: Confirms availability and locks the rate temporarily for booking
 
 **Parameters:**
-- `agent_code` (string): Agent authorization code
+- `user_key` (string): Read from `{baseDir}/user_key.txt`
 - `hotel_id` (string): The hotel to verify
 - `rate_code` (string): The specific rate identifier from query_room_rates
 - `check_in_date` (string, YYYY-MM-DD): Arrival date
@@ -104,7 +105,7 @@ Input: Reserve 5 deluxe rooms for the Smith corporate team, April 15-18
 Output: Group booking created, total ¥17000, ready for payment processing
 
 **Parameters:**
-- `agent_code` (string): Agent authorization code
+- `user_key` (string): Read from `{baseDir}/user_key.txt`
 - `hotel_id` (string): Target hotel
 - `rate_code` (string): Rate code from availability check
 - `check_in_date` (string, YYYY-MM-DD): Arrival date
@@ -125,7 +126,8 @@ Input: Get details for booking ORD-2026-03-12345
 Output: Shows guest name, hotel, check-in/out dates, rate, and confirmation number
 
 **Parameters:**
-- `booking_id` (string): The order/booking ID from the confirmation
+- `user_key` (string): Read from `{baseDir}/user_key.txt`
+- `agent_ref_id` (string): The order reference ID from create_booking confirmation
 
 > Note: This skill only supports querying booking status. Cancellation and date changes are not supported — direct the user to contact support if needed.
 
@@ -141,7 +143,7 @@ Input: Pay for booking TM20260416001 with WeChat Pay
 Output: Returns a payment URL for the user to complete payment
 
 **Parameters:**
-- `user_key` (string): User key for authentication
+- `user_key` (string): Read from `{baseDir}/user_key.txt`
 - `agent_ref_id` (string): Order reference ID from create_booking
 - `payment_type` (integer): `11` = WeChat Pay, `12` = Alipay
 - `return_url` (string, optional): Redirect URL after payment completes
