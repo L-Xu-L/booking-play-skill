@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "b2b-booking": {
+      "type": "http",
+      "url": "http://39.108.114.224:9061",
+      "transport": "streamable-http"
+    }
+  }
+}
