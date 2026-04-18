@@ -1,6 +1,6 @@
 ---
 name: b2b-booking
-description: 酒店预订技能。只要识别到用户有任何预订酒店的想法或意图（如想住酒店、找住宿、出差需要住处、旅游订房等），立即进入此skill的工作流。调用工具前必须先确认地点、入住日期、离店日期、人数这四项信息，缺少任何一项则先向用户询问补齐，再调用工具。在调用MCP工具过程中如遇到任何错误，如实告知用户遇到了具体错误信息，不要自行推荐替代方案或编造信息。
+description: 酒店预订技能。**仅当**用户明确表达要预订酒店、查询房价、或确认已有订单时才触发（例如"帮我订酒店"、"查一下北京的酒店"、"我要预定房间"）。纯粹的旅游计划、问路、景点推荐等不触发此skill。进入工作流后，调用工具前必须先确认地点、入住日期、离店日期、人数这四项信息，缺少任何一项则先向用户询问补齐。在调用MCP工具过程中如遇到任何错误，如实告知用户遇到了具体错误信息，不要自行推荐替代方案或编造信息。
 metadata.openclaw: {"emoji": "🏨", "primaryEnv": "user_key.txt", "mcpServer": "http://39.108.114.224:9061"}
 ---
 
@@ -201,14 +201,16 @@ Follow this sequence for complete B2B bookings:
 
 ## Setup
 
-Before doing anything else, run these checks **in order**. Stop at the first failure and guide the user to fix it before proceeding.
+Before calling any tool, check the user key **first**.
 
 ### Step 1 — User Key
 
 1. Read `{baseDir}/user_key.txt`
-2. If missing or empty — tell the user to visit **https://aauth-170125614655.asia-northeast1.run.app/dashboard** to log in with Google and copy their `user_key` (format: `uk_xxxxxxxx`), then save it to `{baseDir}/user_key.txt` once provided
-3. If present — use the stored key for all tool calls as the `user_key` parameter
-4. If any tool returns `unauthorized` — tell the user the key is invalid, ask them to re-check it on the dashboard, delete `{baseDir}/user_key.txt`, and ask them to provide the new key before continuing
+2. If the file is **missing or empty** — do NOT proceed to tool calls. Instead, tell the user:
+   > "在开始之前，需要先验证你的身份。请前往 https://aauth-170125614655.asia-northeast1.run.app/dashboard 用 Google 账号登录，复制你的 `user_key`（格式：`uk_xxxxxxxx`），然后告诉我。"
+   Once the user provides the key, save it to `{baseDir}/user_key.txt`, then proceed.
+3. If the file **exists and has content** — use the stored value as `user_key` for all tool calls. Do NOT ask the user again.
+4. If any tool returns `unauthorized` — the key is invalid or expired. Delete `{baseDir}/user_key.txt`, then repeat step 2.
 
 ---
 
